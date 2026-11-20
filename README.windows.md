@@ -58,7 +58,7 @@ each Codex launch. That is what `--persist` does on Windows:
 | Mechanism | Trigger | Purpose |
 |---|---|
 | **Watcher** (`watch`) | HKCU `...\Run` autostart; polls every 2 s | re-applies the patch within ~2 s of Codex rewriting it |
-| **Scheduled Task** `CodexBrowserLabRepair` | every 5 min (`--interval MIN`) | safety net when the watcher is not running |
+| **Scheduled Task** `CodexBrowserLabRepair` | every 5 min (`--interval MIN`) | runs `pythonw.exe` directly to repair the patch without opening a console window |
 
 No logon/elevated Scheduled Task is installed. Codex spawns `node_repl` lazily,
 per session — it is not tied to app start. So the sequence is:
@@ -116,7 +116,7 @@ environment — that is exactly what `status` reports as `mode=<unset>`.
 | `~/.codex/browser/config.toml` | optional `allowed` arrays |
 | `~/.codex/plugins/cache/openai-bundled/unified-computer-use/*/.mcp.json` | CUA env flag |
 | `~/.codex/plugins/cache/.../{chrome,browser}/*/scripts/browser-service.mjs` | ignore CDP `Page.navigationBlocked` while the flag is on |
-| `~/.codex/mcp-wrappers/` | installed tool copy, `repair` shim, watcher log, `backups/` of every file touched |
+| `~/.codex/mcp-wrappers/` | installed tool copy, watcher log, `backups/` of every file touched |
 | `HKCU\...\CurrentVersion\Run\CodexBrowserLabWatch` | autostarts the watcher |
 | Scheduled Task `CodexBrowserLabRepair` | periodic repair |
 
@@ -139,7 +139,6 @@ flag support        ok      (browser-service.mjs 26.915.31945 implements it)
 official node_repl  ...\runtimes\cua_node\<hash>\bin\node_repl.exe
 watcher             running=True autostart=True
 persist             CodexBrowserLabRepair=installed
-repair shim         ...\mcp-wrappers\codex-browser-lab-repair.cmd exists=True
 config command      ...\runtimes\cua_node\<hash>\bin\node_repl.exe
 config security     disabled-for-local-testing
 config ok           True
@@ -165,7 +164,7 @@ process is not x64. The config check is authoritative regardless.
 ```
 
 Stops the watcher, removes the HKCU autostart value, deletes `CodexBrowserLabRepair`
-and the `.cmd` shim, and strips `BROWSER_USE_SECURITY_MODE` from `config.toml` and
+and any legacy `.cmd` shim, and strips `BROWSER_USE_SECURITY_MODE` from `config.toml` and
 the CUA `.mcp.json`. Origin allowlists are left in place unless you delete them
 from `config.toml` yourself.
 
